@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -195,6 +197,34 @@ func compareQuads(input []string, generated []string) bool {
 }
 
 func main() {
+	// Generator mode: if called with two args, act as a generator and print the pattern.
+	// This allows building multiple executables from the same source and having them
+	// behave differently depending on the executable name (basename).
+	if len(os.Args) == 3 {
+		progName := filepath.Base(os.Args[0])
+		// remove .exe on Windows
+		progName = strings.TrimSuffix(progName, ".exe")
+		x, err1 := strconv.Atoi(os.Args[1])
+		y, err2 := strconv.Atoi(os.Args[2])
+		if err1 == nil && err2 == nil && x > 0 && y > 0 {
+			// Use the existing quad functions (which return []string) and print them.
+			quadFuncs := map[string]func(int, int) []string{
+				"quadA": quadA,
+				"quadB": quadB,
+				"quadC": quadC,
+				"quadD": quadD,
+				"quadE": quadE,
+			}
+			if f, ok := quadFuncs[progName]; ok {
+				for _, line := range f(x, y) {
+					fmt.Println(line)
+				}
+			}
+		}
+		return
+	}
+
+	// Checker mode: read from stdin and compare against generators
 	input := readInput()
 
 	if len(input) == 0 {
